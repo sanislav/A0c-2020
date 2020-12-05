@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 	"bufio"
-	// "sort"
+	"strings"
+	"strconv"
+	"sort"
 )
-
 func solve() int {
 	file, err := os.Open("input.txt")
 	if err != nil {
@@ -17,51 +18,44 @@ func solve() int {
 
 	scanner := bufio.NewScanner(file)
 	highestID := 0
-	var seats []int
+	seats := make([]int, 0)
 
 	for scanner.Scan() {
 		lineText := scanner.Text()
 		if (len(lineText) == 0) {
 			continue
 		}
+		l := lineText[0:7]
+		rowStr := strings.ReplaceAll(l, "F", "0")
+		rowStr = strings.ReplaceAll(rowStr, "B", "1")
+		rowID, _ := strconv.ParseInt(rowStr, 2, 64)
 
-		rowID := decode(lineText[0:6], 0, 127, "F", "B")
-		colID := decode(lineText[7:10], 0, 7, "L", "R")
-		seatID := (rowID * 8) + colID
+		ll := lineText[7:10]
+		colStr := strings.ReplaceAll(ll, "L", "0")
+		colStr = strings.ReplaceAll(colStr, "R", "1")
+		colID, _ := strconv.ParseInt(colStr, 2, 16)
+
+
+		seatID := (int(rowID) * 8) + int(colID)
+
 		seats = append(seats, seatID)
+
 		if seatID > highestID {
 			highestID = seatID
 		}
 	}
 
+	sort.Ints(seats)
+    prevSeat := 0
+	for i := 0; i < len(seats); i++ {
+		if (seats[i] - prevSeat) == 2 {
+			fmt.Println("My seat:", seats[i] - 1)
+		}
+
+		prevSeat = seats[i]
+	}
+
 	return highestID
-}
-
-func contains(s []int, e int) bool {
-    for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
-}
-
-func decode(s string, lowerCount int, upperCount int, lowerIndicator string, upperIndicator string) int {
-	for c := 0; c < len(s); c++ {
-		if string(s[c]) == lowerIndicator {
-			upperCount = upperCount - 1 - (upperCount - lowerCount) / 2
-		}
-
-		if string(s[c]) == upperIndicator {
-			lowerCount = lowerCount + 1 + (upperCount - lowerCount) / 2
-		}
-	}
-
-	if (string(s[len(s) - 1]) != lowerIndicator) {
-		return lowerCount
-	}
-
-	return upperCount
 }
 
 
