@@ -36,39 +36,128 @@ func getMatrix(dim int) [][]string {
 
 		line++
 	}
-	fmt.Println(matrix)
+
 	return matrix
 }
 
-// count number of occupied adjacent positions
-func seeOccupied(matrix [][]string, i int, j int, seeAdjacent int) int {
-	occupied := 0
-
-	if (seeAdjacent == -1) {
-		dr := []int{-1, 0, 1}
-		dc := []int{-1, 0, 1}
-
-		for _, ddr := range dr {
-			r := i + ddr
-			if (r < 0 || r >= len(matrix) ) {
-				continue
-			}
-			for _, ddc := range dc {
-				c := j + ddc
-
-				if (c < 0 || c >= len(matrix[i])) {
-					continue
-				}
-
-				if matrix[r][c] == "#" {
-					occupied++
-					break
-				}
-			}
-		}
-
-		return occupied
+func isSeat(row int, col int, seatMap [][]string) bool {
+	if row < 0 || row > len(seatMap) || col < 0 || col > len(seatMap[row]) {
+		return false
 	}
+
+	return seatMap[row][col] != "."
+}
+
+func isSeatOccupied(row int, col int, seatMap [][]string) bool {
+	return seatMap[row][col] == "#"
+}
+
+func countVisibleOccupiedSeatsAround(row int, col int, seatMap [][]string) int {
+	res := 0
+
+TopLeft:
+	for shift := 1; row-shift >= 0 && col-shift >= 0; shift++ {
+		r := row - shift
+		s := col - shift
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break TopLeft
+		}
+	}
+Top:
+	for shift := 1; row-shift >= 0; shift++ {
+		r := row - shift
+		s := col
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break Top
+		}
+	}
+TopRight:
+	for shift := 1; row-shift >= 0 && col+shift < len(seatMap[row-shift]); shift++ {
+		r := row - shift
+		s := col + shift
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break TopRight
+		}
+	}
+Left:
+	for shift := 1; col-shift >= 0; shift++ {
+		r := row
+		s := col - shift
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break Left
+		}
+	}
+Right:
+	for shift := 1; col+shift < len(seatMap[row]); shift++ {
+		r := row
+		s := col + shift
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break Right
+		}
+	}
+BottomLeft:
+	for shift := 1; row+shift < len(seatMap) && col-shift >= 0; shift++ {
+		r := row + shift
+		s := col - shift
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break BottomLeft
+		}
+	}
+Bottom:
+	for shift := 1; row+shift < len(seatMap); shift++ {
+		r := row + shift
+		s := col
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break Bottom
+		}
+	}
+BottomRight:
+	for shift := 1; row+shift < len(seatMap) && col+shift < len(seatMap[row+shift]); shift++ {
+		r := row + shift
+		s := col + shift
+
+		if isSeat(r, s, seatMap) {
+			if isSeatOccupied(r, s, seatMap) {
+				res++
+			}
+			break BottomRight
+		}
+	}
+
+	return res
+}
+
+// count number of occupied adjacent positions
+func countOccupiedArround(i int, j int, matrix [][]string) int {
+	occupied := 0
 
 	if i > 0 {
 		if j > 0 && matrix[i-1][j-1] == "#" {
@@ -109,19 +198,26 @@ func seeOccupied(matrix [][]string, i int, j int, seeAdjacent int) int {
 	return occupied
 }
 
-func solve(matrix [][]string, seeAdjacent int, occupiedThreshold int) [][]string {
+func solve(matrix [][]string, around bool) [][]string {
 	duplicate := make([][]string, len(matrix))
 	for i := range matrix {
 		duplicate[i] = make([]string, len(matrix[i]))
 		copy(duplicate[i], matrix[i])
 	}
 
+	counter := countOccupiedArround
+	occupiedThreshold := 3
+	if (around == false) {
+		counter = countVisibleOccupiedSeatsAround
+		occupiedThreshold = 4
+	}
+
 	for i:= 0; i < len(matrix); i++ {
 		for j := 0; j < len(matrix[i]); j++ {
 			char := matrix[i][j]
-			if matrix[i][j] == "L" && seeOccupied(matrix, i, j, seeAdjacent) == 0 {
+			if matrix[i][j] == "L" && counter(i, j, matrix) == 0 {
 				char = "#"
-			} else if matrix[i][j] == "#" && seeOccupied(matrix, i, j, seeAdjacent) > occupiedThreshold {
+			} else if matrix[i][j] == "#" && counter(i, j, matrix) > occupiedThreshold {
 				char = "L"
 			}
 
@@ -132,7 +228,7 @@ func solve(matrix [][]string, seeAdjacent int, occupiedThreshold int) [][]string
 	for i := 0; i < len(matrix); i++ {
 		for j := 0; j < len(matrix[i]); j++ {
 			if (matrix[i][j] != duplicate[i][j]) {
-				return solve(duplicate, seeAdjacent, occupiedThreshold)
+				return solve(duplicate, around)
 			}
 		}
 	}
@@ -143,7 +239,7 @@ func solve(matrix [][]string, seeAdjacent int, occupiedThreshold int) [][]string
 func main() {
 	matrix := getMatrix(98)
 
-	occupied := solve(matrix, 1, 3)
+	occupied := solve(matrix, true)
 	count := 0
 	for i := 0; i < len(occupied); i++ {
 		for j := 0; j < len(occupied[i]); j++ {
@@ -156,8 +252,9 @@ func main() {
 
 	fmt.Println("P1:", count)
 
-	occupied = solve(matrix, -1, 4)
+	occupied = solve(matrix, false)
 	count = 0
+
 	for i := 0; i < len(occupied); i++ {
 		for j := 0; j < len(occupied[i]); j++ {
 			if (occupied[i][j] == "#") {
@@ -166,5 +263,5 @@ func main() {
 		}
 	}
 
-	fmt.Println("P1:", count)
+	fmt.Println("P2:", count)
 }
