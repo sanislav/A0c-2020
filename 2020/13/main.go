@@ -12,10 +12,7 @@ func solveP1(inputString []string) int {
 	earliest, _ := strconv.Atoi(inputString[0])
 	originalEarlyest := earliest
 
-	bid := 0
-	found := false
-
-	for ! found {
+	for {
 		for _, t := range(strings.Split(inputString[1], ",")) {
 			bus, _ := strconv.Atoi(t)
 
@@ -24,17 +21,12 @@ func solveP1(inputString []string) int {
 			}
 
 			if earliest % bus == 0 {
-				bid = bus
-				found = true
-				break
+				return bus * (earliest - originalEarlyest)
 			}
 		}
-		if ! found {
-			earliest++
-		}
-	}
 
-	return bid * (earliest - originalEarlyest)
+		earliest += 1
+	}
 }
 
 func solveP2(inputString []string) int {
