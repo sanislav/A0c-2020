@@ -11,23 +11,20 @@ import (
 func solveP1(inputString []string) int {
 	earliest, _ := strconv.Atoi(inputString[0])
 	originalEarlyest := earliest
-	ts := make([]int, 0)
-
-	for _, c := range(strings.Split(inputString[1], ",")) {
-		if string(c) == "x" {
-			continue
-		}
-		val, _ := strconv.Atoi(c)
-		ts = append(ts, val)
-	}
 
 	bid := 0
 	found := false
 
 	for ! found {
-		for _, t := range(ts) {
-			if earliest % t == 0 {
-				bid = t
+		for _, t := range(strings.Split(inputString[1], ",")) {
+			bus, _ := strconv.Atoi(t)
+
+			if (bus == 0) {
+				continue
+			}
+
+			if earliest % bus == 0 {
+				bid = bus
 				found = true
 				break
 			}
