@@ -29,12 +29,22 @@ func main() {
 
 	// nearby tickts section
 	ansP1 := 0
+
+	// okIntervals := make([][]bool, 20)
+	okIntervals := [20][20]bool{}
+
+	for i := 0; i < 20; i++ {
+		for j := 0; j < 20; j++ {
+			okIntervals[i][j] = true
+		}
+	}
+
 	for _, s := range strings.Split(split[2], "\n") {
 		if (s == "nearby tickets:") {
 			continue
 		}
 		validTicket := []int{}
-		// isValid := true
+		isValid := true
 		vs := strings.Split(s, ",")
 
 		for _, i := range vs {
@@ -54,15 +64,24 @@ func main() {
 
 			if ! valid {
 				ansP1 += v
-				// isValid = false
+				isValid = false
 				break
 			}
 		}
 
-		// if (isValid) {
-		// 	for i, v := range(validTicket) {
-		// }
+		if (isValid) {
+			for i, v := range(validTicket) {
+				for j, limit := range(limits) {
+					if ! ((limit[0] <= v && v <= limit[1]) || (limit[2] <= v && v <= limit[3])) {
+						okIntervals[i][j] = false
+					}
+				}
+			}
+		}
 	}
 
 	fmt.Println(ansP1)
+
+	// figure out which position is which field
+	fmt.Println(okIntervals)
 }
