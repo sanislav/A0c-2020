@@ -4,88 +4,65 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strconv"
+	"regexp"
 	"strings"
 )
 
-func solveP1(split []string, rules map[string][]int, mapStruct map[string]map[int]struct{}) int {
-	ans := 0
-
-	tickets:
-	for _, s := range strings.Split(split[2], "\n")[1:] {
-	fields:
-		for _, s := range strings.Split(s, ",") {
-			n, _ := strconv.Atoi(s)
-			for _, v := range rules {
-				if n >= v[0] && n <= v[1] || n >= v[2] && n <= v[3] {
-					continue fields
-				}
-			}
-			ans += n
-			continue tickets
-		}
-
-		for i, s := range strings.Split(s, ",") {
-			for k, v := range rules {
-				if n, _ := strconv.Atoi(s); !(n >= v[0] && n <= v[1] || n >= v[2] && n <= v[3]) {
-					delete(mapStruct[k], i)
-				}
-			}
-		}
-	}
-
-	return ans
-}
-
-func solveP2(split []string, mapStruct map[string]map[int]struct{}) int {
-	ans := 1
-
-	for len(mapStruct) > 0 {
-		for k, v := range mapStruct {
-			if len(v) != 1 {
-				continue
-			}
-
-			for i := range v {
-				for k := range mapStruct {
-					delete(mapStruct[k], i)
-				}
-				delete(mapStruct, k)
-
-				if strings.HasPrefix(k, "departure") {
-					n, _ := strconv.Atoi(strings.Split(strings.Split(split[1], "\n")[1], ",")[i])
-					ans *= n
-				}
-			}
-		}
-	}
-
-	return ans
-}
 
 func main() {
 	input, _ := ioutil.ReadFile("input.txt")
 	split := strings.Split(strings.TrimSpace(string(input)), "\n\n")
 
-	rules := map[string][]int{}
+	// limit rules section
+	limits := [][]int{}
 	for _, s := range strings.Split(split[0], "\n") {
-		rule := strings.Split(s, ": ")
-		rules[rule[0]] = make([]int, 4)
-		fmt.Sscanf(rule[1], "%d-%d or %d-%d", &rules[rule[0]][0], &rules[rule[0]][1], &rules[rule[0]][2], &rules[rule[0]][3])
-	}
-
-	mapStruct := map[string]map[int]struct{}{}
-	for k := range rules {
-		mapStruct[k] = map[int]struct{}{}
-		for i := 0; i < len(rules); i++ {
-			mapStruct[k][i] = struct{}{}
+		limRule := regexp.MustCompile("\\d+")
+		lim := limRule.FindAllString(s, -1)
+		limInt := []int{}
+		for _, i := range lim {
+			j, _ := strconv.Atoi(i)
+			limInt = append(limInt, j)
 		}
+
+		limits = append(limits, limInt)
 	}
 
-	ans := solveP1(split, rules, mapStruct)
+	// nearby tickts section
+	ansP1 := 0
+	for _, s := range strings.Split(split[2], "\n") {
+		if (s == "nearby tickets:") {
+			continue
+		}
+		validTicket := []int{}
+		// isValid := true
+		vs := strings.Split(s, ",")
 
-	fmt.Println(ans)
+		for _, i := range vs {
+			j, _ := strconv.Atoi(i)
+			validTicket = append(validTicket, j)
+		}
 
-	ans = solveP2(split, mapStruct)
+		for _, v := range(validTicket) {
+			valid := false
 
-	fmt.Println(ans)
+			for _, limit := range(limits) {
+				if (limit[0] <= v && v <= limit[1]) || (limit[2] <= v && v <= limit[3]) {
+					valid = true
+					break
+				}
+			}
+
+			if ! valid {
+				ansP1 += v
+				// isValid = false
+				break
+			}
+		}
+
+		// if (isValid) {
+		// 	for i, v := range(validTicket) {
+		// }
+	}
+
+	fmt.Println(ansP1)
 }
