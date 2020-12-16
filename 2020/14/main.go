@@ -95,11 +95,11 @@ func solveP2(inputString []string) int {
 	return ans
 }
 
+// If the bitmask bit is 0, the corresponding memory address bit is unchanged.
+// If the bitmask bit is 1, the corresponding memory address bit is overwritten with 1.
+// If the bitmask bit is X, the corresponding memory address bit is floating.
 func applyMaskP2(mask string, binary string) []string {
 	res := ""
-	// If the bitmask bit is 0, the corresponding memory address bit is unchanged.
-	// If the bitmask bit is 1, the corresponding memory address bit is overwritten with 1.
-	// If the bitmask bit is X, the corresponding memory address bit is floating.
 
 	for i := len(mask) - 1; i >= 0; i-- {
 		diff := len(mask) - i - 1
@@ -133,9 +133,8 @@ func generateAddrs(addresses []string) []string {
 				addr1 := addr[0:c] + "0" + addr[c+1:]
 				addr2 := addr[0:c] + "1" + addr[c+1:]
 
-				addresses[i] = addresses[len(addresses)-1] // Copy last element to index i.
-				addresses[len(addresses)-1] = ""   // Erase last element (write zero value).
-				addresses = addresses[:len(addresses)-1]   // Truncate slice.
+				addresses = append(addresses[:i], addresses[i+1:]...)
+
 				addresses = append(addresses, addr1)
 				addresses = append(addresses, addr2)
 
