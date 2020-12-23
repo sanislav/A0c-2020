@@ -29,12 +29,11 @@ func main() {
 
 	// nearby tickts section
 	ansP1 := 0
+	const l = 20
+	okIntervals := [l][l]bool{}
 
-	// okIntervals := make([][]bool, 20)
-	okIntervals := [20][20]bool{}
-
-	for i := 0; i < 20; i++ {
-		for j := 0; j < 20; j++ {
+	for i := 0; i < l; i++ {
+		for j := 0; j < l; j++ {
 			okIntervals[i][j] = true
 		}
 	}
@@ -83,5 +82,38 @@ func main() {
 	fmt.Println(ansP1)
 
 	// figure out which position is which field
-	fmt.Println(okIntervals)
+	dict := make(map[int]int, 0)
+	for len(dict) != len(okIntervals) {
+		for lineInd, i := range(okIntervals) {
+			c := 0
+			ind := -1
+			for trueInd, j := range(i) {
+				if j == true {
+					if _, ok := dict[trueInd]; ok {
+						continue;
+					} else {
+						c++
+						ind = trueInd
+					}
+				}
+				if c > 1 {
+					break
+				}
+			}
+			if c == 1 {
+				dict[ind] = lineInd
+			}
+		}
+	}
+
+	ansP2 := 1
+	myTicket := strings.Split(strings.ReplaceAll(split[1], "your ticket:\n", ""), ",");
+
+	for i := 0; i < 6; i++ {
+		pos := dict[i]
+		ticketVal, _ := strconv.Atoi(myTicket[pos])
+		ansP2 *= ticketVal
+	}
+
+	fmt.Println(ansP2)
 }
