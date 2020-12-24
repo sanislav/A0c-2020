@@ -1,10 +1,7 @@
 package main
 
 import (
-	"strconv"
 	"fmt"
-	// "io/ioutil"
-	// "strings"
 )
 
 type Node struct {
@@ -12,148 +9,88 @@ type Node struct {
 	next  *Node
 }
 
-type LinkedList struct {
-	head *Node
-	len  int
-}
-
-func (l *LinkedList) Insert(val int) *Node {
-	n := Node{}
-	n.value = val
-	if l.len == 0 {
-		l.head = &n
-		l.len++
-		return l.head
-	}
-	ptr := l.head
-	for i := 0; i < l.len; i++ {
-		if ptr.next == nil {
-			ptr.next = &n
-			l.len++
-			return &n
+func minMax(is []int) (min, max int) {
+	min, max = is[0], is[0]
+	for _, i := range is {
+		if i < min {
+			min = i
 		}
-		ptr = ptr.next
-	}
-
-	return &n
-}
-
-func (l *LinkedList) Search(val int) *Node {
-	ptr := l.head
-	for i := 0; i < l.len; i++ {
-		if ptr.value == val {
-			return ptr
+		if i > max {
+			max = i
 		}
-		ptr = ptr.next
 	}
-
-	return ptr
+	return
 }
 
-// The crab picks up the three cups that are immediately clockwise of the current cup. They are removed from the circle; cup spacing is adjusted as necessary to maintain the circle.
-// The crab selects a destination cup: the cup with a label equal to the current cup's label minus one. If this would select one of the cups that was just picked up, the crab will keep subtracting one until it finds a cup that wasn't just picked up. If at any point in this process the value goes below the lowest value on any cup's label, it wraps around to the highest value on any cup's label instead.
-// The crab places the cups it just picked up so that they are immediately clockwise of the destination cup. They keep the same order as when they were picked up.
-// The crab selects a new current cup: the cup which is immediately clockwise of the current cup.
-func shuffle(l LinkedList, count int) LinkedList {
-	current := l.head
+func shuffle(input []int, nTurns int) map[int]*Node {
+	min, max := minMax(input)
 
-	for i:= 0; i < count; i++ {
-		extractedMap := make(map[int]bool, 0)
-		var extracted []*Node
+	nodeLookup := map[int]*Node{}
+	for _, i := range input {
+		nodeLookup[i] = &Node{value: i}
+	}
+	for idx, i := range input {
+		nodeLookup[i].next = nodeLookup[input[(idx+1)%len(input)]]
+	}
 
-		extractedMap[current.next.value] = true
-		extractedMap[current.next.next.value] = true
-		extractedMap[current.next.next.next.value] = true
-		extracted = append(extracted, current.next, current.next.next, current.next.next.next)
+	current := nodeLookup[input[0]]
+	for i := 0; i < nTurns; i++ {
+		threeCupStart := current.next
+		threeCupEnd := threeCupStart.next.next
+		current.next = threeCupEnd.next
 
 		destination := current.value - 1
-		if destination == 0 {
-			destination = 9
-		}
-		_, justExtracted := extractedMap[destination]
-
-		for justExtracted {
-			destination--
-			if destination == 0 {
-				destination = 9
+		for {
+			if destination < min {
+				destination = max
 			}
 
-			_, justExtracted = extractedMap[destination]
-		}
+			if (destination != threeCupStart.value) &&
+				(destination != threeCupStart.next.value) &&
+				(destination != threeCupEnd.value) {
+				break
+			}
 
-		destinationElement := l.Search(destination)
-		current.next = extracted[2].next
-		extracted[2].next = destinationElement.next
-		destinationElement.next = extracted[0]
+			destination--
+		}
+		destinationCup := nodeLookup[destination]
+
+		t := destinationCup.next
+		destinationCup.next = threeCupStart
+		threeCupEnd.next = t
 
 		current = current.next
 	}
 
-	return l
+	return nodeLookup
+}
+
+func solveP1(input []int) string {
+	nodeLookup := shuffle(input, 100)
+
+	s := ""
+	cup := nodeLookup[1].next
+	for cup != nodeLookup[1] {
+		s += fmt.Sprint(cup.value)
+		cup = cup.next
+	}
+	return s
+}
+
+func solveP2(input []int) int {
+	_, max := minMax(input)
+	length := len(input)
+	for i := 0; i < 1000000-length; i++ {
+		input = append(input, max+1+i)
+	}
+
+	nodeLookup := shuffle(input, 10000000)
+
+	return nodeLookup[1].next.value * nodeLookup[1].next.next.value
 }
 
 func main() {
 	input := []int{2, 4, 7, 8, 1, 9, 3, 5, 6}
-
-	list := LinkedList{}
-	listP2 := LinkedList{}
-
-	for i, v := range input {
-		node := list.Insert(v)
-		_ = listP2.Insert(v)
-
-		if i == len(input) - 1 {
-			node.next = list.head
-
-		}
-	}
-
-	for i:= 10; i <= 1000000; i++ {
-		node := listP2.Insert(i)
-
-		if i == 1000000 {
-			node.next = listP2.head
-		}
-	}
-
-	fmt.Println(listP2.len)
-	l := shuffle(list, 100)
-
-	ptr := l.head
-	ansP1 := ""
-	start := false
-	finish := false
-	for ! finish {
-		if len(ansP1) == l.len - 1 {
-			finish = true
-			break
-		}
-
-		if (ptr.value == 1) {
-			start = true
-		} else {
-			if start {
-				ansP1 += strconv.Itoa(ptr.value)
-			}
-		}
-
-		ptr = ptr.next
-	}
-
-	fmt.Println(ansP1)
-
-	l2 := shuffle(listP2, 10000000)
-	ptr = l2.head
-	ansP2 := 1
-
-	for {
-		if (ptr.value == 1) {
-			ansP2 = ptr.next.value * ptr.next.next.value
-			break
-		}
-
-		ptr = ptr.next
-	}
-
-	fmt.Println(ansP2)
+	fmt.Println("Part 1 =", solveP1(input))
+	fmt.Println("Part 2 =", solveP2(input))
 }
