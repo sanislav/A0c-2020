@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"os"
 	"regexp"
 )
 
@@ -169,28 +170,108 @@ func generateImgPixels(grid [12][12]string, tileToPixels map[string]Pixels) Pixe
 	image := [120]string{}
 
 	for i := 0; i < len(grid); i++ {
-		for j := 0; j < len(grid[0]) - 1; j+=2 {
+		for j := 0; j < len(grid[0]); j++ {
 			sensorId := grid[i][j]
-			belowSensorId := grid[i][j+1]
-			// flip / rotate to match neighbours
-			rotations := tileToPixels[sensorId].Rotations()
-			rotationsBelow := tileToPixels[belowSensorId].Rotations()
 
-			for _, r := range rotations {
-				found := false
-				for _, br := range rotationsBelow {
-					if r[len(r) - 1] == br[0] {
-						for ir := 0; ir < len(r); ir++ {
-							image[(i/2*20) + ir] += string(r[ir][1:len(r[ir])-1])
-							image[(i/2*20) + 10 + ir] += string(br[ir][1:len(br[ir])-1])
+			downId, upId, rightId, leftId := "", "", "", ""
+			downR, upR, rightR, leftR := []Pixels{}, []Pixels{}, []Pixels{}, []Pixels{}
+
+			// flip / rotate to match neighbours below and right
+			rotations := tileToPixels[sensorId].Rotations()
+
+			if i > 0 {
+				upId = grid[i-1][j]
+				upR = tileToPixels[upId].Rotations()
+			}
+			if i < len(grid) - 1 {
+				downId = grid[i+1][j]
+				downR = tileToPixels[downId].Rotations()
+			}
+			if j > 0 {
+				leftId = grid[i][j-1]
+				leftR = tileToPixels[leftId].Rotations()
+			}
+			if j < len(grid[0]) - 1 {
+				rightId = grid[i][j+1]
+				rightR = tileToPixels[rightId].Rotations()
+			}
+
+			// check rotations matching right neighbour rotations
+			position := ""
+			for index, r := range rotations {
+				matchesL := []string{}
+				matchesR := []string{}
+				matchesT := []string{}
+				matchesB := []string{}
+
+				strIndex := strconv.Itoa(index)
+
+				edgeL := r.col(0)
+				edgeR := r.col(len(r) - 1)
+				edgeT := r[0]
+				edgeB := r[len(r) - 1]
+
+				if len(rightR) > 0 {
+					for _, rr := range rightR {
+						edgeLR := rr.col(0)
+
+						if (edgeR == edgeLR) {
+							matchesL = append(matchesL, strIndex)
 						}
-						found = true
-						break
 					}
 				}
-				if found {
-					break
+
+				if len(leftR) > 0 {
+					for _, lr := range leftR {
+						edgeRR := lr.col(len(lr) - 1)
+
+						if (edgeL == edgeRR) {
+							matchesR = append(matchesR, strIndex)
+						}
+					}
 				}
+
+				if len(upR) > 0 {
+					for _, ur := range upR {
+						edgeUU := ur[0]
+
+						if (edgeT == edgeUU) {
+							matchesT = append(matchesT, strIndex)
+
+						}
+					}
+				}
+
+				if len(downR) > 0 {
+					for _, dr := range downR {
+						edgeRD := dr[len(dr) - 1]
+
+						if (edgeB == edgeRD) {
+							matchesB = append(matchesB, strIndex)
+						}
+					}
+				}
+
+				// fmt.Println(matchesB, matchesT, matchesL, matchesR)
+				if len(matchesB) == 1 {
+					position = matchesB[0]
+				} else if len(matchesT) == 1 {
+					position = matchesT[0]
+				} else if len(matchesL) == 1 {
+					position = matchesL[0]
+				} else if len(matchesR) == 1 {
+					position = matchesR[0]
+				}
+			}
+
+			posIndex, _ := strconv.Atoi(position)
+
+			if position == "" {
+				os.Exit(1)
+			}
+			sensorPixels := rotations[posIndex]
+			for ir := 0; ir < len(sensorPixels); ir++ {
+				image[(i*10) + ir] += string(sensorPixels[ir][1:len(sensorPixels[ir]) - 1])
 			}
 		}
 	}
@@ -243,8 +324,8 @@ func main() {
 	fmt.Println(ans)
 
 	sensorPositions := rebuildImage(m)
-
 	img := generateImgPixels(sensorPositions, tilesToPixels)
+
 	monster := []string{"..................#.", "#....##....##....###", ".#..#..#..#..#..#..."}
 	nmonster := 0
 	for _, r := range img.Rotations() {
