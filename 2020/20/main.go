@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
-	"os"
+	// "os"
 	"regexp"
 )
 
@@ -168,119 +168,119 @@ func rebuildImage(m map[string][]string) [12][12]string {
 
 func generateImgPixels(grid [12][12]string, tileToPixels map[string]Pixels) Pixels {
 	image := [120]string{}
+	// rotationsUsed := map[string]int{}
+	order := map[string]Pixels{}
+
+	rotations := tileToPixels[grid[0][0]].Rotations()
+	rotationsR := tileToPixels[grid[0][1]].Rotations()
+	rotationsB := tileToPixels[grid[1][0]].Rotations()
+
+	// InitialRotation:
+	for index, r := range rotations {
+		edgeRight := r.col(len(r) - 1)
+		edgeBottom := r[len(r) - 1]
+		matches := []int{}
+		matchR := -1
+		matchB := -1
+		for ir, rr := range rotationsR {
+			edgeLR := rr.col(0)
+
+			if (edgeRight == edgeLR) {
+				matches = append(matches, index)
+				matchR = ir
+			}
+		}
+
+		if len(matches) == 0 {
+			continue
+		}
+
+		for ib, rb := range rotationsB {
+			edgeUR := rb[0]
+
+			if (edgeBottom == edgeUR) {
+				if (len(matches) == 0) {
+					matches = append(matches, index)
+				} else {
+					for im, m := range matches {
+						if m != index {
+							matches = append(matches[:im], matches[im+1:]...)
+						}
+					}
+				}
+				matchB = ib
+			}
+		}
+
+		if len(matches) == 1 {
+			order[grid[0][0]] = rotations[matches[0]]
+			order[grid[0][1]] = rotationsR[matchR]
+			order[grid[1][0]] = rotationsB[matchB]
+			break
+		}
+	}
 
 	for i := 0; i < len(grid); i++ {
 		for j := 0; j < len(grid[0]); j++ {
 			sensorId := grid[i][j]
+			if len(order[sensorId]) > 0 {
+				continue
+			}
 
-			downId, upId, rightId, leftId := "", "", "", ""
-			downR, upR, rightR, leftR := []Pixels{}, []Pixels{}, []Pixels{}, []Pixels{}
-
-			// flip / rotate to match neighbours below and right
+			// flip / rotate to match neighbours
 			rotations := tileToPixels[sensorId].Rotations()
 
-			if i > 0 {
-				upId = grid[i-1][j]
-				upR = tileToPixels[upId].Rotations()
+			upN, leftN := Pixels{}, Pixels{}
+			if i > 0 && len(order[grid[i-1][j]]) > 0 {
+				upN = order[grid[i-1][j]]
 			}
-			if i < len(grid) - 1 {
-				downId = grid[i+1][j]
-				downR = tileToPixels[downId].Rotations()
-			}
-			if j > 0 {
-				leftId = grid[i][j-1]
-				leftR = tileToPixels[leftId].Rotations()
-			}
-			if j < len(grid[0]) - 1 {
-				rightId = grid[i][j+1]
-				rightR = tileToPixels[rightId].Rotations()
+			if j > 0 && len(order[grid[i][j-1]]) > 0 {
+				leftN = order[grid[i][j-1]]
 			}
 
-			// check rotations matching right neighbour rotations
-			position := ""
-			for index, r := range rotations {
-				matchesL := []string{}
-				matchesR := []string{}
-				matchesT := []string{}
-				matchesB := []string{}
-
-				strIndex := strconv.Itoa(index)
-
+			for _, r := range rotations {
 				edgeL := r.col(0)
-				edgeR := r.col(len(r) - 1)
 				edgeT := r[0]
-				edgeB := r[len(r) - 1]
 
-				if len(rightR) > 0 {
-					for _, rr := range rightR {
-						edgeLR := rr.col(0)
+				if len(leftN) > 0 {
+					edgeR := leftN.col(len(leftN) - 1)
 
-						if (edgeR == edgeLR) {
-							matchesL = append(matchesL, strIndex)
-						}
+					if (edgeL != edgeR) {
+						continue
 					}
 				}
 
-				if len(leftR) > 0 {
-					for _, lr := range leftR {
-						edgeRR := lr.col(len(lr) - 1)
+				if len(upN) > 0 {
+					edgeB := upN[len(upN) - 1]
 
-						if (edgeL == edgeRR) {
-							matchesR = append(matchesR, strIndex)
-						}
+					if (edgeT != edgeB) {
+						continue
 					}
 				}
 
-				if len(upR) > 0 {
-					for _, ur := range upR {
-						edgeUU := ur[0]
+				order[grid[i][j]] = r
 
-						if (edgeT == edgeUU) {
-							matchesT = append(matchesT, strIndex)
-
-						}
-					}
-				}
-
-				if len(downR) > 0 {
-					for _, dr := range downR {
-						edgeRD := dr[len(dr) - 1]
-
-						if (edgeB == edgeRD) {
-							matchesB = append(matchesB, strIndex)
-						}
-					}
-				}
-
-				// fmt.Println(matchesB, matchesT, matchesL, matchesR)
-				if len(matchesB) == 1 {
-					position = matchesB[0]
-				} else if len(matchesT) == 1 {
-					position = matchesT[0]
-				} else if len(matchesL) == 1 {
-					position = matchesL[0]
-				} else if len(matchesR) == 1 {
-					position = matchesR[0]
-				}
+				break
 			}
+		}
+	}
 
-			posIndex, _ := strconv.Atoi(position)
-
-			if position == "" {
-				os.Exit(1)
-			}
-			sensorPixels := rotations[posIndex]
-			for ir := 0; ir < len(sensorPixels); ir++ {
-				image[(i*10) + ir] += string(sensorPixels[ir][1:len(sensorPixels[ir]) - 1])
+	for i := 0; i < len(grid); i ++ {
+		for j := 0; j < len(grid[0]); j ++ {
+			position := order[grid[i][j]]
+			for ir := 0; ir < len(position); ir++ {
+				image[(i*10) + ir] += position[ir][1:len(position[ir]) - 1]
 			}
 		}
 	}
 
 	cutImg := Pixels{}
 	for i := 0; i < len(image); i++ {
-		if (i % 10) != 0 && (i % 9) != 0 {
-			cutImg = append(cutImg, image[i])
+		if (i % 10 == 0) || (i + 1) % 10 == 0 {
+			continue
 		}
+
+		cutImg = append(cutImg, image[i])
 	}
 
 	return cutImg
@@ -324,8 +324,8 @@ func main() {
 	fmt.Println(ans)
 
 	sensorPositions := rebuildImage(m)
-	img := generateImgPixels(sensorPositions, tilesToPixels)
 
+	img := generateImgPixels(sensorPositions, tilesToPixels)
 	monster := []string{"..................#.", "#....##....##....###", ".#..#..#..#..#..#..."}
 	nmonster := 0
 	for _, r := range img.Rotations() {
