@@ -9,27 +9,27 @@ import (
 	"regexp"
 )
 
-// DP formula: g(start, {nodes...}) = min(Cost[start][k] + g(k, {nodes...}-k)) for k in each {nodes}
+// DP formula: g(start, {nodes...}) = min(Cost[start][k] + g(k, {nodes...}-{k})) for each k in {nodes}
 func travellingSalesperson(start string,  locations map[string]bool, distances map[string]map[string]int, memo map[string]int, isMin bool) int {
 	key := start
-	for k, _ := range locations {
+	for k := range locations {
 		key += "_" + k
 	}
 	if v, exists := memo[key]; exists {
         return v
 	}
 
-    values := []int{}
-
-	// base case - we reached a leaf - no need to go back to start 
+	// base case - we reached a leaf - no need to go back to start
 	if len(locations) == 0 {
 		return 0
 	}
 
-    for k, _ := range locations {
+    values := []int{}
+
+    for k := range locations {
 		subList := map[string]bool{}
 
-		for k2, _ := range locations {
+		for k2 := range locations {
 			if k != k2 {
 				subList[k2] = true
 			}
@@ -58,7 +58,6 @@ func main() {
 
 	distances := map[string]map[string]int{}
 	locations := map[string]bool{}
-	start := ""
 	for _, s := range lines {
 		cities := regexp.MustCompile("(\\w+) to (\\w+)")
 		matches := cities.FindAllStringSubmatch(s, -1)
@@ -88,16 +87,13 @@ func main() {
 
 		locations[city1] = true
 		locations[city2] = true
-
 	}
 
-	delete(locations, start)
-
 	var memo = map[string]int{}
-	ansP1 = travellingSalesperson(start, locations, distances, memo, true)
+	ansP1 = travellingSalesperson("", locations, distances, memo, true)
 
 	memo = map[string]int{}
-	ansP2 = travellingSalesperson(start, locations, distances, memo, false)
+	ansP2 = travellingSalesperson("", locations, distances, memo, false)
 
 	fmt.Println(ansP1)
 	fmt.Println(ansP2)
