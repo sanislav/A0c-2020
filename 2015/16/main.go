@@ -8,10 +8,6 @@ import (
 	"strconv"
 )
 
-type Sue struct {
-	children, cats, samoyeds, pomeranians, akitas, vizslas, goldfish, trees, cars, perfumes int
-}
-
 func main() {
 	input, _ := ioutil.ReadFile("input.txt")
 	lines := strings.Split(strings.TrimSpace(string(input)), "\n")
@@ -42,28 +38,25 @@ func main() {
 		matchedP1 := true
 		matchedP2 := true
 		for k, v := range info {
-			if matchingSue[k] != v{
-				matchedP1 = false
-				break
-			}
-		}
-
-		for k, v := range info {
 			if k == "cats" || k == "trees" {
 				if matchingSue[k] >= v{
 					matchedP2 = false
-					break
 				}
 			} else if k == "pomeranians" || k == "goldfish" {
 				if matchingSue[k] <= v{
 					matchedP2 = false
-					break
 				}
-			} else {
-				if matchingSue[k] != v{
+			}
+
+			if matchingSue[k] != v{
+				matchedP1 = false
+				if k != "cats" && k != "trees" && k != "pomeranians" && k != "goldfish" {
 					matchedP2 = false
-					break
 				}
+			}
+
+			if matchedP1 == false && matchedP2 == false {
+				break
 			}
 		}
 
