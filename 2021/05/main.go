@@ -1,0 +1,103 @@
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"math"
+	"strconv"
+	"strings"
+)
+
+func main() {
+	input, _ := ioutil.ReadFile("input.txt")
+	lines := strings.Split(strings.TrimSpace(string(input)), "\n")
+	ansP1 := 0
+	ansP2 := 0
+
+	m := getLines(lines, false)
+	m2 := getLines(lines, true)
+	for i := 0; i < len(m[0]); i++ {
+		for j := 0; j < len(m[i]); j++ {
+			if m[i][j] > 1 {
+				ansP1++
+			}
+		}
+	}
+
+	for i := 0; i < len(m2[0]); i++ {
+		for j := 0; j < len(m2[i]); j++ {
+			if m2[i][j] > 1 {
+				ansP2++
+			}
+		}
+	}
+
+	fmt.Println(ansP1)
+	fmt.Println(ansP2)
+}
+
+func getLines(lines []string, p2 bool) [1000][1000]int {
+	m := [1000][1000]int{}
+
+	for _, line := range(lines) {
+		parts := strings.Split(line, " -> ")
+
+		point1 := strings.Split(parts[0], ",")
+		point2 := strings.Split(parts[1], ",")
+
+		x1, _ := strconv.Atoi(point1[0])
+		y1, _ := strconv.Atoi(point1[1])
+
+		x2, _ := strconv.Atoi(point2[0])
+		y2, _ := strconv.Atoi(point2[1])
+		sameLine := x1 == x2 || y1 == y2
+		sameDiag := (x1 != x2 && y1 != y2) && math.Abs(float64(x1) - float64(x2)) == math.Abs(float64(y1) - float64(y2))
+
+		if (sameLine) {
+			if x1 < x2 {
+				for i := x1; i <= x2; i ++ {
+					m[y1][i] += 1
+				}
+			} else if x2 < x1 {
+				for i := x2; i <= x1; i ++ {
+					m[y1][i] += 1
+				}
+			}
+			if y1 < y2 {
+				for i := y1; i <= y2; i ++ {
+					m[i][x1] += 1
+				}
+			} else if y2 < y1 {
+				for i := y2; i <= y1; i ++ {
+					m[i][x1] += 1
+				}
+			}
+		}
+
+		if (sameDiag && p2) {
+			if (x1 < x2) {
+				c := 0
+				for i := x1; i <= x2; i ++ {
+					if (y1 < y2) {
+						m[y1 + c][i] += 1
+					} else {
+						m[y1 - c][i] += 1
+					}
+					c++
+				}
+			} else {
+				c := 0
+				for i := x1; i >= x2; i -- {
+					if (y1 < y2) {
+						m[y1 + c][i] += 1
+					} else {
+						m[y1 - c][i] += 1
+					}
+					c++
+				}
+			}
+		}
+	}
+
+	return m
+}
