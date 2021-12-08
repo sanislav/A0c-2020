@@ -34,20 +34,20 @@ func main() {
 	}
 	fmt.Println(ansP1)
 
-	best := math.MaxInt32
+	ansP2 := math.MaxInt32
 	for pos := range (positions) {
 		score := 0
 		for _, p := range positions {
 			s := int(math.Abs(float64(p) - float64(pos)))
-			for i := 1; i <= s; i++ {
-				score += i
-			}
+			// each step adrs 1 cost to fuel
+			// 1 + 2 + 3 + ... + s == s * (s + 1) / 2
+			score += s*(s + 1) / 2
 		}
 
-		if score < best {
-			best = score
+		if score < ansP2 {
+			ansP2 = score
 		}
 	}
 
-	fmt.Println(best)
+	fmt.Println(ansP2)
 }
