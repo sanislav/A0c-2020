@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,7 +29,7 @@ func main() {
 	for i := 0; i < len(floor); i++ {
 		for j:= 0; j < len(floor[0]); j++ {
 			if i == 0 || j == 0 || i == len(floor) - 1 || j == len(floor[0]) - 1 {
-				floor[i][j] = math.MaxInt16
+				floor[i][j] = 9
 			} else {
 				c := lines[i-1][j-1]
 				intC, _ := strconv.Atoi(string(c))
@@ -66,31 +65,24 @@ func isLowest(floor [ml][mc]int, i int, j int) bool {
 
 
 func countBasin(floor [ml][mc]int, i int, j int, basin string) int {
-	coords := strconv.Itoa(i)  + "_" +  strconv.Itoa(j)
+	coords := getHash(i, j)
 
 	r := addToBasin(basin, coords)
 	if r {
 		visited[coords] = true
 	}
 
-	if floor[i-1][j] != math.MaxInt16 && floor[i-1][j] != 9 {
-		coords := strconv.Itoa(i-1)  + "_" +  strconv.Itoa(j)
-		addToVistit(coords, i-1, j)
+	if floor[i-1][j] != 9 {
+		addToVistit(i-1, j)
 	}
-	if floor[i+1][j] != math.MaxInt16 && floor[i+1][j] != 9 {
-		coords := strconv.Itoa(i+1)  + "_" +  strconv.Itoa(j)
-		addToVistit(coords, i+1, j)
-
+	if floor[i+1][j] != 9 {
+		addToVistit(i+1, j)
 	}
-	if floor[i][j-1] != math.MaxInt16 && floor[i][j-1] != 9 {
-		coords := strconv.Itoa(i)  + "_" +  strconv.Itoa(j-1)
-		addToVistit(coords, i, j-1)
-
+	if floor[i][j-1] != 9 {
+		addToVistit(i, j-1)
 	}
-	if floor[i][j+1] != math.MaxInt16 && floor[i][j+1] != 9 {
-		coords := strconv.Itoa(i)  + "_" +  strconv.Itoa(j+1)
-		addToVistit(coords, i, j+1)
-
+	if floor[i][j+1] != 9 {
+		addToVistit(i, j+1)
 	}
 
 	if (len(toVisit) == 0) {
@@ -104,7 +96,13 @@ func countBasin(floor [ml][mc]int, i int, j int, basin string) int {
 	return countBasin(floor, next[0], next[1], basin)
 }
 
-func addToVistit(coords string, i int, j int) {
+func getHash(i int, j int) string {
+	return strconv.Itoa(i)  + "_" +  strconv.Itoa(j)
+}
+
+func addToVistit(i int, j int) {
+	coords := getHash(i, j)
+	
 	if _, vis := visited[coords]; ! vis {
 		set := true
 		for _, c := range toVisit {
