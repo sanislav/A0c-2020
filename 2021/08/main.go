@@ -6,6 +6,78 @@ import (
 	"strings"
 )
 
+var digits = map[int]map[string]bool{
+    0: {
+		"a": true,
+		"c": true,
+		"f": true,
+		"g": true,
+		"e": true,
+		"b": true,
+	},
+	1: {
+		"c": true,
+		"f": true,
+	},
+	2: {
+		"a": true,
+		"c": true,
+		"d": true,
+		"e": true,
+		"g": true,
+	},
+	3: {
+		"a": true,
+		"c": true,
+		"d": true,
+		"f": true,
+		"g": true,
+	},
+	4: {
+		"b": true,
+		"d": true,
+		"c": true,
+		"f": true,
+	},
+	5: {
+		"a": true,
+		"b": true,
+		"d": true,
+		"f": true,
+		"g": true,
+	},
+	6: {
+		"a": true,
+		"b": true,
+		"d": true,
+		"f": true,
+		"g": true,
+		"e": true,
+	},
+	7: {
+		"a": true,
+		"c": true,
+		"f": true,
+	},
+	8: {
+		"a": true,
+		"b": true,
+		"c": true,
+		"d": true,
+		"e": true,
+		"f": true,
+		"g": true,
+	},
+	9: {
+		"a": true,
+		"b": true,
+		"c": true,
+		"d": true,
+		"f": true,
+		"g": true,
+	},
+}
+
 func main() {
 	input, _ := ioutil.ReadFile("input.txt")
 	lines := strings.Split(strings.TrimSpace(string(input)), "\n")
@@ -40,38 +112,20 @@ func main() {
 
 
 func calculateLineSum(signals []string, output []string) int {
-	m := map[int]map[string]bool{}
-
 	for _, signal := range(signals) {
-		digit := map[string]bool{}
-
-		if len(signal) == 2 {
-			digit["c"] = true;
-			digit["f"] = true;
-
-			m[1] = digit;
-		}
-
-		if len(signal) == 3 {
-			digit["a"] = true;
-			digit["c"] = true;
-			digit["f"] = true;
-
-			m[1] = digit;
-		}
-
-		if len(signal) == 2 {
-			digit["c"] = true;
-			digit["f"] = true;
-
-			m[1] = digit;
-		}
-
-		if len(signal) == 2 {
-			digit["c"] = true;
-			digit["f"] = true;
-
-			m[1] = digit;
+		fmt.Println(signal)
+		found := true
+		for i := 0; i <= 9; i++ {
+			if len(digits[i]) == len(signal) {
+				for _, c := range signal {
+					if _, ok := digits[i][c]; !ok {
+						found = false
+						break
+					}
+				}
+				if found
+				i
+			}
 		}
 	}
 	return 0;
