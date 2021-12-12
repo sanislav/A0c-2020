@@ -6,78 +6,6 @@ import (
 	"strings"
 )
 
-var digits = map[int]map[string]bool{
-    0: {
-		"a": true,
-		"c": true,
-		"f": true,
-		"g": true,
-		"e": true,
-		"b": true,
-	},
-	1: {
-		"c": true,
-		"f": true,
-	},
-	2: {
-		"a": true,
-		"c": true,
-		"d": true,
-		"e": true,
-		"g": true,
-	},
-	3: {
-		"a": true,
-		"c": true,
-		"d": true,
-		"f": true,
-		"g": true,
-	},
-	4: {
-		"b": true,
-		"d": true,
-		"c": true,
-		"f": true,
-	},
-	5: {
-		"a": true,
-		"b": true,
-		"d": true,
-		"f": true,
-		"g": true,
-	},
-	6: {
-		"a": true,
-		"b": true,
-		"d": true,
-		"f": true,
-		"g": true,
-		"e": true,
-	},
-	7: {
-		"a": true,
-		"c": true,
-		"f": true,
-	},
-	8: {
-		"a": true,
-		"b": true,
-		"c": true,
-		"d": true,
-		"e": true,
-		"f": true,
-		"g": true,
-	},
-	9: {
-		"a": true,
-		"b": true,
-		"c": true,
-		"d": true,
-		"f": true,
-		"g": true,
-	},
-}
-
 func main() {
 	input, _ := ioutil.ReadFile("input.txt")
 	lines := strings.Split(strings.TrimSpace(string(input)), "\n")
@@ -103,30 +31,85 @@ func main() {
 		}
 	}
 
-	// m := map[int][]string{}
-
-
 	fmt.Println(ansP1)
 	fmt.Println(ansP2)
 }
 
 
 func calculateLineSum(signals []string, output []string) int {
+	digitList := [10]string{}
+
 	for _, signal := range(signals) {
-		fmt.Println(signal)
-		found := true
-		for i := 0; i <= 9; i++ {
-			if len(digits[i]) == len(signal) {
-				for _, c := range signal {
-					if _, ok := digits[i][c]; !ok {
-						found = false
-						break
-					}
+		if len(signal) == 2 {
+			digitList[1] = signal
+		} else if len(signal) == 3 {
+			digitList[7] = signal
+		} else if len(signal) == 4 {
+			digitList[4] = signal
+		} else if len(signal) == 5 {
+			if len(digitList[2]) == 0 {
+				digitList[2] = signal
+			} else {
+				if len(digitList[3]) == 0 {
+					digitList[3] = signal
+				} else {
+					digitList[5] = signal
 				}
-				if found
-				i
 			}
+		} else if len(signal) == 6 {
+			if len(digitList[0]) == 0 {
+				digitList[0] = signal
+			} else {
+				if len(digitList[6]) == 0 {
+					digitList[6] = signal
+				} else {
+					digitList[9] = signal
+				}
+			}
+		} else if len(signal) == 7 {
+			digitList[8] = signal
 		}
 	}
+
+	digitSegments := [7]string{}
+	digitSegments[0] = substract(digitList[7], digitList[1])
+	o1 := intersect(intersect(digitList[2], digitList[3]), digitList[5])
+	o2 := intersect(intersect(digitList[0], digitList[6]), digitList[9])
+	digitSegments[1] = intersect(substract(digitList[4], digitList[1]), o2)
+	digitSegments[3] = intersect(substract(digitList[4], digitList[1]), o1)
+	digitSegments[6] = intersect(substract(substract(digitList[8], digitList[4]), digitSegments[0]), o1)
+	digitSegments[4] = substract(substract(substract(digitList[8], digitList[4]), digitSegments[0]), digitSegments[6])
+	digitSegments[5] = substract(substract(substract(o2, digitSegments[0]), digitSegments[1]), digitSegments[6])
+	digitSegments[2] = substract(digitList[1], digitSegments[5])
+
+	fmt.Println(digitSegments)
+	// fmt.Println(digitSegments[2])
 	return 0;
+}
+
+func substract(a string, b string) string {
+	diff := ""
+	for _, c := range a {
+		found := strings.Contains(b, string(c))
+
+		if (! found) {
+			diff += string(c)
+		}
+	}
+
+	return diff
+}
+
+
+func intersect(a string, b string) string {
+	common := ""
+	for _, c := range a {
+		found := strings.Contains(b, string(c))
+
+		if (found) {
+			common += string(c)
+		}
+	}
+
+	return common
 }
